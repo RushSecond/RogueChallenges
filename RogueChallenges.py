@@ -51,7 +51,7 @@ TEST_MORDRED = False
 TEST_SLIMES = False
 TEST_COOLDOWNS = False
 TEST_HEAL_REDUCTION = False
-TEST_SH_INCREASE = True
+TEST_SH_INCREASE = False
 TEST_HORDES = False
 
 # shamelessly stolen from bugfixes in case that mod isn't present
@@ -385,7 +385,7 @@ class FasterShieldGates(Mutator):
 
     def __init__(self):
         Mutator.__init__(self)
-        self.description = "Gates spawn units 1 turn faster and have 1 SH, elite gates have 2 SH"
+        self.description = "Enemy gates spawn monsters 1 turn faster and have 1 SH, elite gates have 2 SH"
         self.global_triggers[Level.EventOnUnitPreAdded] = self.on_enemy_added
         
     def on_enemy_added(self, evt):
@@ -397,6 +397,8 @@ class FasterShieldGates(Mutator):
 
     def modify_unit(self, unit):
         if not unit.is_lair:
+            return
+        if unit.team == TEAM_PLAYER:
             return
         
         gate = unit.get_buff(Generator2Buff)
