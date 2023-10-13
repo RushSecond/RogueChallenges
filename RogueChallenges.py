@@ -381,6 +381,8 @@ class LessConsumables(Mutator):
         for _ in range(levelgen.num_recharges):
             levelgen.items.append(mana_potion())
             
+        levelgen.random.shuffle(levelgen.items)
+            
 class FasterShieldGates(Mutator):
 
     def __init__(self):
@@ -507,6 +509,7 @@ class WizardAndCooldowns(Mutator):
             
         if levelgen.difficulty > 6:
             wizard = self.random.choice(RareMonsters.all_wizards)[0]()
+            wizard.is_boss = True
             levelgen.bosses.append(wizard)
 
     def on_levelgen(self, levelgen):            
