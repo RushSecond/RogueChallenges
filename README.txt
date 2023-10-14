@@ -28,7 +28,7 @@ This mod adds many additonal archmage trials. All of them limit your spells and 
 
 - Level 2 onward has one additional gate.
 - Level 8 onward has another additional gate.
-- Level 15 onward has yet another gate. At this point the number of gates can range from 8-12.
+- Level 15 onward has yet another gate.
 
 ----- Rogue Challenge 2:
 --- All levels have more monsters. Areas with relatively easier monsters have many more of them.
