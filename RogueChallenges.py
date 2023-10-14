@@ -1,11 +1,6 @@
-#TODO
-# Make a readme (this mod requires AAA loader but nothing else ya?)
-# Make a github proj
-
 #--------------------------
 #You can change the parameters of Roguelike Mode here.
 #--------------------------
-
 #The number of spells you start with (default is 14). Set this to -1 to start with all spells
 STARTING_SPELLS = 14
 #The number of starting spells that are level 1 (default is 2)
@@ -47,9 +42,10 @@ except ImportError:
 
 TEST_CHEATY = False
 TEST_ELITE_GATES = False
+TEST_SHIELD_GATES = False
 TEST_MORDRED = False
 TEST_SLIMES = False
-TEST_COOLDOWNS = False
+TEST_WIZARD_COOLDOWNS = False
 TEST_HEAL_REDUCTION = False
 TEST_SH_INCREASE = False
 TEST_HORDES = False
@@ -390,6 +386,10 @@ class FasterShieldGates(Mutator):
         self.description = "Enemy gates spawn monsters 1 turn faster and have 1 SH, elite gates have 2 SH"
         self.global_triggers[Level.EventOnUnitPreAdded] = self.on_enemy_added
         
+    def on_game_begin(self, game):
+        if TEST_SHIELD_GATES:
+            game.p1.add_item(troll_crown())
+            
     def on_enemy_added(self, evt):
         self.modify_unit(evt.unit)
 
@@ -504,8 +504,10 @@ class WizardAndCooldowns(Mutator):
             self.modify_unit(evt.unit)
             
     def on_levelgen_pre(self, levelgen):            
-        if TEST_COOLDOWNS and levelgen.difficulty == 1:
-            levelgen.bosses.append(FrostfireWizard())
+        if TEST_WIZARD_COOLDOWNS:
+            wizard = FrostfireWizard()
+            wizard.is_boss = True
+            levelgen.bosses.append(wizard)
             
         if levelgen.difficulty > 6:
             wizard = self.random.choice(RareMonsters.all_wizards)[0]()
@@ -676,19 +678,6 @@ def addCumulativeTrial(newMutator):
         (6, 8), # 23 - guaranteed 3 unique
         (7, 8), # 24
 """
-
-#Ascension ideas!
-# More normal monsters (by increasing min 5->10), and even more increased for low level monsters
-# More gates, and even more increased for low level monsters
-# Monster hp increased by 30% (rounded down)
-# Each level beyond level 12 has an additional pack of elite monsters (4-6)
-# Less consumables (possibly split this into two harder mods, one for consumables and hp pots, one for mana pots)
-# Later levels have gates that spawn elite monsters (higher hp too) (merge with elite gates)
-# Mordred creates more difficult realms, and gains a shield every 2 turns, up to max of 7
-# enemies have +15% damage, rounded up
-# (all enemy cooldowns -30%, rounded up) (+ extra wizard after level 6?)
-# (You restore 30% less HP with all healing effects)
-# All gates have 1 shield (and take 1 less turn to spawn a monster)
    
 addCumulativeTrial(MoreGates())
 addCumulativeTrial(MonsterHordes(10,20,10,6))
