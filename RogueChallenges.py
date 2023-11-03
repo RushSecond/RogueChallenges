@@ -41,8 +41,8 @@ try:
 except ImportError:
     ANTI_POISON = False
 
-TEST_CHEATY = True
-TEST_ELITE_GATES = True
+TEST_CHEATY = False
+TEST_ELITE_GATES = False
 TEST_SHIELD_GATES = False
 TEST_MORDRED = False
 TEST_SLIMES = False
