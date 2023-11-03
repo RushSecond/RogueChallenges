@@ -50,7 +50,7 @@ This mod adds many additonal archmage trials. All of them limit your spells and 
 - Elite monsters are variant monsters or monsters that are one level higher than the maximum "normal" monster level that can appear in a rift.
 - Realm 9 onward has 0-2 extra elite monsters, and every 2 realms there is an additional elite monster, until it maxes at 5-7
 - Elite gates have higher HP than normal gates and spawn these more difficult additional monsters.
-- Starting at realm 9, for the rest of the game all realmss have one normal gate replaced by an elite gate.
+- Starting at realm 9, for the rest of the game all realms have one normal gate replaced by an elite gate.
 - This replacement is increased to two gates at realm 15, and increased to three gates at realm 22.
 - I recommend avoiding rifts with three Bone Shambler Megalith gates spread out over the map.
 
