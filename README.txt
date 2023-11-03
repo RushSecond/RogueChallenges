@@ -16,7 +16,7 @@ Feel free to open RogueChallenges.py and edit the parameters near the top if you
 This mod adds many additonal archmage trials. All of them limit your spells and skills similarly to the RogueLikeMode mod. Each successive challenge have all the modifiers of all the previous challenges, similarly to Ascensions in Slay the Spire, Covenent in Monster Train, Eclipse in Risk of Rain 2, etc. All of them are succinctly summarized on the Archmage Trials screen ingame, but if you want to know all the little details then here they are.
 
 ----- Roguelike Mode:
---- Start with 14 spells and 7 skills. Gain 2 new spells and 1 new skill after each completed level.
+--- Start with 14 spells and 7 skills. Gain 2 new spells and 1 new skill after each completed realm.
 
 - You always start with two spells that cost 1 SP.
 - Unlike previous versions, you get the new spells and skill immediately when you defeat all the enemies, so you can see what new things you got before entering a new level.

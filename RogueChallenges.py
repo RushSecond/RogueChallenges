@@ -106,7 +106,7 @@ class RogueLikeMode(Mutator):
         self.num_newspells = math.floor(num_newspells)
         self.num_newskills = math.floor(num_newskills)
         self.discount = math.floor(discount)
-        self.description = "Start with %d spells and %d skills\nGain %d new spells and %d new skills after each completed level" % (self.numspells, self.numskills, self.num_newspells, self.num_newskills)
+        self.description = "Start with %d spells and %d skills\nGain %d new spells and %d new skills after each completed realm" % (self.numspells, self.numskills, self.num_newspells, self.num_newskills)
         if self.discount > 0:
             self.description += "\nSkills are %d SP cheaper" % self.discount
         self.otherspells = None
