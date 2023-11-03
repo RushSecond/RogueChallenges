@@ -24,40 +24,41 @@ This mod adds many additonal archmage trials. All of them limit your spells and 
 - Again, you can open RogueChallenges.py and edit the parameters near the top if you want to change how many spells and skills you start with, or how many you gain after each level, or even bring back the skill discount. You can even disable the spell and skill restrictions entirely if you want to try the following trials without them.
 
 ----- Rogue Challenge 1:
---- Each level has additional monster generators.
+--- Each realm has additional monster generators.
 
 - Level 2 onward has one additional gate.
 - Level 8 onward has another additional gate.
 - Level 15 onward has yet another gate.
 
 ----- Rogue Challenge 2:
---- All levels have more monsters. Areas with relatively easier monsters have many more of them.
+--- All realms have more monsters. Realms with relatively easier monsters have many more of them.
 
-- Usually all levels have 5-20 "normal" monsters.
+- Usually all realms have 5-20 "normal" monsters.
 - If these monsters are at the maximum possible level relative to the player's progress, the amount is increased to 10-20.
 - If these monsters are instead at the minimum possible level, the amount is increased to 20-26.
 - The final amount scales proporionally if the monsters have level in between the maximum or minimum.
 
 ----- Rogue Challenge 3:
---- All enemy units have 15% more damage.
+--- All enemy monsters have 15% more damage.
 
 - This only affects the damage from spells. Passive effects like Efreet damage aura remain the same.
 - The damage is always rounded to the nearest whole number. A spell with 3 damage will still remain at 3, but a spell with 4 damage will be increased to 5.
 
 ----- Rogue Challenge 4:
---- Each level beyond level 12 has 5-7 extra elite monsters; later levels have elite gates
+--- Realms 9 and beyond have extra elite monsters and elite gates
 
-- Elite monsters are random non-variant monsters that are one level higher than the maximum "normal" monster level that can appear in a rift.
+- Elite monsters are variant monsters or monsters that are one level higher than the maximum "normal" monster level that can appear in a rift.
+- Realm 9 onward has 0-2 extra elite monsters, and every 2 realms there is an additional elite monster, until it maxes at 5-7
 - Elite gates have higher HP than normal gates and spawn these more difficult additional monsters.
-- Starting at level 15, for the rest of the game all levels have one normal gate replaced by an elite gate.
-- This replacement is increased to two gates at level 18, and increased to three gates at level 22.
+- Starting at level 9, for the rest of the game all levels have one normal gate replaced by an elite gate.
+- This replacement is increased to two gates at level 15, and increased to three gates at level 22.
 - I recommend avoiding rifts with three Bone Shambler Megalith gates spread out over the map.
 
 ----- Rogue Challenge 5:
---- Less consumable items and mana potions in each level.
+--- Less consumable items and mana potions in each realm.
 
-- Normally after level 4, each rift has a 1/6 chance of containing two mana potions and a 2/6 chance of one mana potion. This is changed to a 1/10 chance of two mana potions and a 4/10 chance of one mana potion. The chance of getting no mana potions is unchanged.
-- Normally after level 2, each rift has a 1/8 chance of three consumables, a 1/8 chance of two consumables, and a 2/8 chance of one consumable. This is changed to a 1/8 chance of two consumables and a 3/8 chance of one consumable. The chance of getting no consumables is unchanged.
+- Normally after realm 4, each realm has a 1/6 chance of containing two mana potions and a 2/6 chance of one mana potion. This is changed to a 1/10 chance of two mana potions and a 4/10 chance of one mana potion. The chance of getting no mana potions is unchanged.
+- Normally after realm 2, each realm has a 1/8 chance of three consumables, a 1/8 chance of two consumables, and a 2/8 chance of one consumable. This is changed to a 1/8 chance of two consumables and a 3/8 chance of one consumable. The chance of getting no consumables is unchanged.
 
 ----- Rogue Challenge 6:
 --- Mordred creates more difficult realms, and gains a shield every 2 turns, up to max of 7.
@@ -94,7 +95,7 @@ This mod adds many additonal archmage trials. All of them limit your spells and 
 - This can increase SH above 20. I'm really sorry about the glass butterflies.
 
 ----- Rogue Challenge 11:
---- All enemy monsters have cooldowns reduced by 30%, rounded up; enemy wizards appear after level 6.
+--- All enemy monsters have cooldowns reduced by 30%, rounded up; enemy wizards appear after realm 6.
 
 - The smallest cooldown that is affected is 4, which is changed to 3 by this challenge.
 - The wizards that can appear are the same ones that appear in Wizard Warlords trial.
@@ -106,9 +107,9 @@ This mod adds many additonal archmage trials. All of them limit your spells and 
 - Again the damage only affects spells, and rounds to the nearest whole number.
 
 ----- Rogue Challenge 13:
---- 1 less SP in every third level.
+--- 1 less SP in every third realm.
 
-- Affects levels 3, 6, 9, 12, etc.
+- Affects realms 3, 6, 9, 12, etc.
 - I put this challenge last since its has the greatest difficulty/interesting ratio.
 
 ---------------------------------------------------------------------------------------------------
