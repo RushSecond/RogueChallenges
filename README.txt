@@ -19,16 +19,16 @@ This mod adds many additonal archmage trials. All of them limit your spells and 
 --- Start with 14 spells and 7 skills. Gain 2 new spells and 1 new skill after each completed realm.
 
 - You always start with two spells that cost 1 SP.
-- Unlike previous versions, you get the new spells and skill immediately when you defeat all the enemies, so you can see what new things you got before entering a new level.
+- Unlike previous versions, you get the new spells and skill immediately when you defeat all the enemies, so you can see what new things you got before entering a new realm.
 - There is no discount on skills, by default.
-- Again, you can open RogueChallenges.py and edit the parameters near the top if you want to change how many spells and skills you start with, or how many you gain after each level, or even bring back the skill discount. You can even disable the spell and skill restrictions entirely if you want to try the following trials without them.
+- Again, you can open RogueChallenges.py and edit the parameters near the top if you want to change how many spells and skills you start with, or how many you gain after each realm, or even bring back the skill discount. You can even disable the spell and skill restrictions entirely if you want to try the following trials without them.
 
 ----- Rogue Challenge 1:
 --- Each realm has additional monster generators.
 
-- Level 2 onward has one additional gate.
-- Level 8 onward has another additional gate.
-- Level 15 onward has yet another gate.
+- Realm 2 onward has one additional gate.
+- Realm 8 onward has another additional gate.
+- Realm 15 onward has yet another gate.
 
 ----- Rogue Challenge 2:
 --- All realms have more monsters. Realms with relatively easier monsters have many more of them.
@@ -50,8 +50,8 @@ This mod adds many additonal archmage trials. All of them limit your spells and 
 - Elite monsters are variant monsters or monsters that are one level higher than the maximum "normal" monster level that can appear in a rift.
 - Realm 9 onward has 0-2 extra elite monsters, and every 2 realms there is an additional elite monster, until it maxes at 5-7
 - Elite gates have higher HP than normal gates and spawn these more difficult additional monsters.
-- Starting at level 9, for the rest of the game all levels have one normal gate replaced by an elite gate.
-- This replacement is increased to two gates at level 15, and increased to three gates at level 22.
+- Starting at realm 9, for the rest of the game all realmss have one normal gate replaced by an elite gate.
+- This replacement is increased to two gates at realm 15, and increased to three gates at realm 22.
 - I recommend avoiding rifts with three Bone Shambler Megalith gates spread out over the map.
 
 ----- Rogue Challenge 5:
