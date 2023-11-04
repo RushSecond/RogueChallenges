@@ -292,7 +292,7 @@ class MonsterHPMultFraction(Mutator):
 
 class EliteSpawnsAndGates(Mutator):
 
-    def __init__(self, realm_start, realm_step, max_avg_elites):
+    def __init__(self, realm_start = 9, realm_step = 2, max_avg_elites = 6):
         Mutator.__init__(self)
         self.realm_start = realm_start
         if TEST_ELITE_GATES:
@@ -623,10 +623,12 @@ class EnemyDamageMult(Mutator):
                 
 class WizardAndCooldowns(Mutator):
 
-    def __init__(self, mult=0.7):
+    def __init__(self, cool_mult=0.7, realm_wizard_start = 7, wizard_chance_per_realm = .1):
         Mutator.__init__(self)
-        self.mult = mult
-        self.description = "All enemy monsters have cooldowns reduced by %d%%, rounded up; enemy wizards appear after realm 6" % round((1-self.mult)*100)
+        self.cool_mult = cool_mult
+        self.realm_wizard_start = realm_wizard_start
+        self.wizard_chance_per_realm = wizard_chance_per_realm
+        self.description = "All enemy monsters have cooldowns reduced by %d%%, rounded up; enemy wizards may appear in realm 7 or later" % round((1-self.cool_mult)*100)
         self.global_triggers[Level.EventOnUnitPreAdded] = self.on_enemy_added
 
     def on_enemy_added(self, evt):
@@ -638,9 +640,10 @@ class WizardAndCooldowns(Mutator):
             wizard = FrostfireWizard()
             wizard.is_boss = True
             levelgen.bosses.append(wizard)
-            
-        if levelgen.difficulty > 6:
-            wizard = self.random.choice(RareMonsters.all_wizards)[0]()
+        
+        chance = self.wizard_chance_per_realm * (1 + levelgen.difficulty - self.realm_wizard_start)
+        if levelgen.random.random() < chance:
+            wizard = levelgen.random.choice(RareMonsters.all_wizards)[0]()
             wizard.is_boss = True
             levelgen.bosses.append(wizard)
 
@@ -654,7 +657,7 @@ class WizardAndCooldowns(Mutator):
         
         for spell in unit.spells:
             if hasattr(spell, 'cool_down'):
-                spell.cool_down = math.ceil(spell.cool_down * self.mult - 0.01)
+                spell.cool_down = math.ceil(spell.cool_down * self.cool_mult - 0.01)
 
 class WorseHealPotSpell(HealPotSpell):
 
@@ -815,7 +818,7 @@ def addCumulativeTrial(newMutator):
 addCumulativeTrial(MoreGates(realm_list=[2,15]))
 addCumulativeTrial(MonsterHordes(10,20,10,6))
 addCumulativeTrial(EnemyDamageMult(1.15)) 
-addCumulativeTrial(EliteSpawnsAndGates(9,2,6))
+addCumulativeTrial(EliteSpawnsAndGates(realm_start = 9, realm_step = 2, max_avg_elites = 6))
 addCumulativeTrial(LessConsumables())
 if not MORDRED_OVERHAULED:
     addCumulativeTrial(StrongerMordred()) 
@@ -823,7 +826,7 @@ addCumulativeTrial(MonsterHPMultFraction(1.3))
 addCumulativeTrial(FasterShieldGates())
 addCumulativeTrial(PlayerHealingReduction(healMissing = .6, healMax = .4)) 
 addCumulativeTrial(EnemyShieldIncrease(chance=0.3, gateChance = 0.02))
-addCumulativeTrial(WizardAndCooldowns(0.7))
+addCumulativeTrial(WizardAndCooldowns(cool_mult=0.7, realm_wizard_start = 7, wizard_chance_per_realm = .1))
 addCumulativeTrial(EnemyDamageMult(1.3))
 addCumulativeTrial(LessSpellPoints())
 
