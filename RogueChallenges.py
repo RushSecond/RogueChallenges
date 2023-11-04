@@ -655,48 +655,54 @@ class WizardAndCooldowns(Mutator):
                 spell.cool_down = math.ceil(spell.cool_down * self.mult - 0.01)
 
 class WorseHealPotSpell(HealPotSpell):
+
+    def __init__(self, healMissing, healMax):
+        HealPotSpell.__init__(self)
+        self.healMissing = healMissing
+        self.healMax = healMax
+
     def cast_instant(self, x, y):
         poison = self.caster.get_buff(Poison)
         if poison:
             self.caster.remove_buff(poison)
         else:
-            self.caster.deal_damage(self.caster.cur_hp-self.caster.max_hp, Tags.Heal, self)
+            missing_hp_heal = (self.caster.max_hp - self.caster.cur_hp) * self.healMissing
+            max_hp_heal = self.caster.max_hp * self.healMax
+            heal_amount = max(missing_hp_heal, max_hp_heal)
+            self.caster.deal_damage(-heal_amount, Tags.Heal, self)
             
 class PlayerHealingReduction(Mutator):
 
-    def __init__(self, healReducPercent=30):
+    def __init__(self, healMissing, healMax):
         Mutator.__init__(self)
-        self.healReducPercent = healReducPercent
-        self.description = "Healing potions restore %d%% of your missing HP, and you restore %d%% less HP with all other healing effects"  % (100-healReducPercent, healReducPercent)
-        
+        self.healMissing = healMissing
+        self.healMax = healMax
+        self.description = "Healing potions restore %d%% of your missing HP or %d%% of your max HP, whichever is greater" % (round(self.healMissing*100), round(self.healMax*100))
+             
     def worse_heal_potion(self):
         item = heal_potion()
-        newDescription = "Drinking this potion restores 100%% of the drinker's missing HP.\n(Restores %d%% of missing HP after the healing reduction.)\n" %(100-self.healReducPercent)
+        newDescription = "Drinking this potion restores %d%% of your missing HP or %d%% of your max HP, whichever is greater.\n" % (round(self.healMissing*100), round(self.healMax*100))
         if ANTI_POISON:
             newDescription += "If the user is [poisoned], remove [poison] but does not heal."
         else:
             newDescription += "Cannot be used while poisoned."
         item.description = newDescription
-        item.set_spell(WorseHealPotSpell())
+        item.set_spell(WorseHealPotSpell(self.healMissing, self.healMax))
         return item
 
     def on_game_begin(self, game):
-        game.p1.apply_buff(HealReductionCurse(self.healReducPercent))
         newPotion = self.worse_heal_potion()
         newPotion.spell.caster = game.p1
         newPotion.spell.owner = game.p1
         game.p1.items[0] = newPotion
         
         if TEST_HEAL_REDUCTION:
-            game.p1.cur_hp = 5
+            game.p1.cur_hp = 1
             game.p1.add_spell(SoulTax())
             
     def on_levelgen_pre(self, levelgen):            
         if TEST_HEAL_REDUCTION:
-            if levelgen.difficulty == 1:
-                levelgen.bosses.append(Ogre())
-            else:
-                levelgen.items.append(heal_potion())
+            levelgen.items.append(heal_potion())
         
         for i in range(len(levelgen.items)):
             if levelgen.items[i].name == "Healing Potion":
@@ -816,7 +822,7 @@ if not MORDRED_OVERHAULED:
     addCumulativeTrial(StrongerMordred()) 
 addCumulativeTrial(MonsterHPMultFraction(1.3))    
 addCumulativeTrial(FasterShieldGates())
-addCumulativeTrial(PlayerHealingReduction(35)) 
+addCumulativeTrial(PlayerHealingReduction(healMissing = .6, healMax = .4)) 
 addCumulativeTrial(EnemyShieldIncrease(0.3))
 addCumulativeTrial(WizardAndCooldowns(0.7))
 addCumulativeTrial(EnemyDamageMult(1.3))

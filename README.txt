@@ -82,9 +82,10 @@ This mod adds many additonal archmage trials. All of them limit your spells and 
 - Be very careful about realms with multiple war banners as the monster count can really get out of hand quickly.
 
 ----- Rogue Challenge 9:
---- Healing potions restore 65% of your missing HP, and you restore 35% less HP with all other healing effects.
+--- Healing potions restore 60% of your missing HP or 40% of your max HP, whichever is greater.
 
 - You still get the most value from your healing potions by waiting until you have very low HP remaining.
+- If you want to return to full HP for safety, you can just use two healing potions.
 
 ----- Rogue Challenge 10:
 --- Each point of SH on monsters has a 30% chance of granting +1 SH.
