@@ -204,17 +204,19 @@ class RogueLikeModeBuff(Level.Buff):
             
 class MoreGates(Mutator):
     
-    def __init__(self):
+    def __init__(self, realm_list=[2,15]):
         Mutator.__init__(self)
+        self.realm_list = realm_list
         self.description = "Each realm has additional monster generators"
 
     def on_levelgen_pre(self, levelgen):
         #dont add gates to Mordred's place
-        if levelgen.difficulty == 1 or levelgen.difficulty == Level.LAST_LEVEL:
+        if levelgen.difficulty == Level.LAST_LEVEL:
             return
         
-        moreGateNum = 1 if levelgen.difficulty < 15 else 2
-        levelgen.num_generators += moreGateNum
+        for realm_num in self.realm_list:
+            if levelgen.difficulty >= realm_num:
+                levelgen.num_generators += 1
              
 class MonsterHordes(Mutator):
 
@@ -810,7 +812,7 @@ def addCumulativeTrial(newMutator):
         (7, 8), # 24
 """
    
-addCumulativeTrial(MoreGates())
+addCumulativeTrial(MoreGates(realm_list=[2,15]))
 addCumulativeTrial(MonsterHordes(10,20,10,6))
 addCumulativeTrial(EnemyDamageMult(1.15)) 
 addCumulativeTrial(EliteSpawnsAndGates(9,2,6))
