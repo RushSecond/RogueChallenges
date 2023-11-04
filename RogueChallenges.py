@@ -410,7 +410,7 @@ class EliteSpawnsAndGates(Mutator):
             chance = .5 if i == 0 else .3
             
             # 0% last time if we still need an elite gate
-            if i == num_boss_spawns-1 and not hasattr(levelgen, "gate_elite"):
+            if difficulty >= self.realm_start and i == num_boss_spawns-1 and not hasattr(levelgen, "gate_elite"):
                 chance = 0
             
             if levelgen.random.random() < chance or 'forcevariant' in sys.argv:
@@ -707,19 +707,13 @@ class PlayerHealingReduction(Mutator):
         for i in range(len(levelgen.items)):
             if levelgen.items[i].name == "Healing Potion":
                 levelgen.items[i] = self.worse_heal_potion()
-        
-class HealReductionCurse(Level.Buff):
-
-    def __init__(self, healReducPercent):
-        Level.Buff.__init__(self)
-        self.buff_type = Level.BUFF_TYPE_PASSIVE
-        self.resists[Tags.Heal] = healReducPercent
             
 class EnemyShieldIncrease(Mutator):
     
-    def __init__(self, chance=0.3):
+    def __init__(self, chance=0.3, gateChance = 0.02):
         Mutator.__init__(self)
         self.chance = chance
+        self.gateChance = gateChance
         self.description = "Each point of SH on monsters has a %d%% chance of granting +1 SH" % round((self.chance)*100)
         self.global_triggers[Level.EventOnUnitPreAdded] = self.on_enemy_added
 
@@ -735,16 +729,19 @@ class EnemyShieldIncrease(Mutator):
 
     def on_levelgen(self, levelgen):            
         for u in levelgen.level.units:
-            self.modify_unit(u, levelgen.random)
+            self.modify_unit(u, levelgen.random, levelgen.difficulty)
 
-    def modify_unit(self, unit, prng=None):
-        if unit.is_lair or unit.team == TEAM_PLAYER or unit.name == "Mordred":
+    def modify_unit(self, unit, prng=None, difficulty = 1):
+        if unit.team == TEAM_PLAYER or unit.name == "Mordred":
             return
             
         if not prng:
             prng = random
         
         num_trials = unit.shields
+        shieldChance = self.chance
+        if unit.is_lair:
+            shieldChance = min(self.chance, self.gateChance * (difficulty - 1))
         for _ in range(0, num_trials):
             if prng.random() < self.chance:
                 unit.shields += 1
@@ -823,7 +820,7 @@ if not MORDRED_OVERHAULED:
 addCumulativeTrial(MonsterHPMultFraction(1.3))    
 addCumulativeTrial(FasterShieldGates())
 addCumulativeTrial(PlayerHealingReduction(healMissing = .6, healMax = .4)) 
-addCumulativeTrial(EnemyShieldIncrease(0.3))
+addCumulativeTrial(EnemyShieldIncrease(chance=0.3, gateChance = 0.02))
 addCumulativeTrial(WizardAndCooldowns(0.7))
 addCumulativeTrial(EnemyDamageMult(1.3))
 addCumulativeTrial(LessSpellPoints())

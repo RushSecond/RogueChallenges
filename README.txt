@@ -93,6 +93,7 @@ This mod adds many additonal archmage trials. All of them limit your spells and 
 - Enemies with SH could end up with no additional SH. Or they could end up with double SH, if they are very lucky.
 - As an example, a glass golem normally has 2 SH. With this challenge, each different glass golem has a 49% chance of 2 SH, a 42% chance of 3 SH, and a 9% chance of 4 SH.
 - This can increase SH above 20. I'm really sorry about the glass butterflies.
+- After realm 1 this effect applies to gates at a 2% chance, increasing by 2% each realm until it reaches 30%
 
 ----- Rogue Challenge 11:
 --- All enemy monsters have cooldowns reduced by 30%, rounded up; enemy wizards appear after realm 6.
