@@ -670,7 +670,10 @@ class WizardAndCooldowns(Mutator):
         if not evt.unit.ever_spawned:
             self.modify_unit(evt.unit)
             
-    def on_levelgen_pre(self, levelgen):            
+    def on_levelgen_pre(self, levelgen):
+        if levelgen.difficulty == Level.LAST_LEVEL:
+            return
+            
         if TEST_WIZARD_COOLDOWNS:
             wizard = FrostfireWizard()
             wizard.is_boss = True
@@ -831,7 +834,7 @@ def addCumulativeTrial(newMutator):
         (1, 3), # 4 - more elites
         (2, 3), # 5 - generators increase
         (2, 4), # 6 - chance of unique
-        (2, 4), # 7 - (guaranteed wizard)
+        (2, 4), # 7 - (10% wizard)
         (2, 4), # 8
         (2, 4), # 9 - more elites (slightly more, and change one gate to an elite type )
         (3, 4), # 10 - generators increase
