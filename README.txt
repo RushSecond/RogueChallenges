@@ -27,8 +27,7 @@ This mod adds many additonal archmage trials. All of them limit your spells and 
 --- Each realm has additional monster generators.
 
 - Realm 2 onward has one additional gate.
-- Realm 8 onward has another additional gate.
-- Realm 15 onward has yet another gate.
+- Realm 15 onward has another additional gate.
 
 ----- Rogue Challenge 2:
 --- All realms have more monsters. Realms with relatively easier monsters have many more of them.

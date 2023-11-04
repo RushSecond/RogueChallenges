@@ -213,7 +213,7 @@ class MoreGates(Mutator):
         if levelgen.difficulty == 1 or levelgen.difficulty == Level.LAST_LEVEL:
             return
         
-        moreGateNum = 1 if levelgen.difficulty < 8 else 2 if levelgen.difficulty < 15 else 3
+        moreGateNum = 1 if levelgen.difficulty < 15 else 2
         levelgen.num_generators += moreGateNum
              
 class MonsterHordes(Mutator):
@@ -794,7 +794,7 @@ def addCumulativeTrial(newMutator):
         (2, 3), # 5 - generators increase
         (2, 4), # 6 - chance of unique
         (2, 4), # 7 - (guaranteed wizard)
-        (2, 4), # 8 - (+1 gate)
+        (2, 4), # 8
         (2, 4), # 9 - more elites (slightly more, and change one gate to an elite type )
         (3, 4), # 10 - generators increase
         (3, 5), # 11 - guaranteed unique, harder uniques
