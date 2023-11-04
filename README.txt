@@ -109,10 +109,18 @@ This mod adds many additonal archmage trials. All of them limit your spells and 
 - Again the damage only affects spells, and rounds to the nearest whole number.
 
 ----- Rogue Challenge 13:
---- 1 less SP in every third realm.
+--- Every 4 realms, there's one less Memory Orb to pick up.
 
-- Affects realms 3, 6, 9, 12, etc.
+- Affects realms 4, 8, 12, 16, etc.
 - I put this challenge last since its has the greatest difficulty/interesting ratio.
+
+----- Unfair Challenge:
+--- All nerfs I've made to Rogue Challenges are reverted. This is REALLY HARD.
+
+- Realm 8 onward has an additional gate.
+- Wizards have a 100% chance of appearing in realm 7 onward.
+- Instead of every 4 realms, there's one less Memory Orb every 3 realms.
+- Good luck. You'll need it.
 
 ---------------------------------------------------------------------------------------------------
 

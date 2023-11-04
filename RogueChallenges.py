@@ -414,10 +414,14 @@ class EliteSpawnsAndGates(Mutator):
             # 0% last time if we still need an elite gate
             if difficulty >= self.realm_start and i == num_boss_spawns-1 and not hasattr(levelgen, "gate_elite"):
                 chance = 0
+                
+            roll_result = None
             
             if levelgen.random.random() < chance or 'forcevariant' in sys.argv:
                 spawn_type = levelgen.random.choice(levelgen.spawn_options)
                 roll_result = self.roll_variant_new(spawn_type[0], levelgen)
+                
+            if roll_result is not None:
                 levelgen.bosses.extend(roll_result)
             else:
                 levelgen.bosses.extend(self.get_elites_new(levelgen))
@@ -628,7 +632,7 @@ class WizardAndCooldowns(Mutator):
         self.cool_mult = cool_mult
         self.realm_wizard_start = realm_wizard_start
         self.wizard_chance_per_realm = wizard_chance_per_realm
-        self.description = "All enemy monsters have cooldowns reduced by %d%%, rounded up; enemy wizards may appear in realm 7 or later" % round((1-self.cool_mult)*100)
+        self.description = "All enemy monsters have cooldowns reduced by %d%%, rounded up; enemy wizards may appear in realm %d or later" % (round((1-self.cool_mult)*100), self.realm_wizard_start)
         self.global_triggers[Level.EventOnUnitPreAdded] = self.on_enemy_added
 
     def on_enemy_added(self, evt):
@@ -752,12 +756,13 @@ class EnemyShieldIncrease(Mutator):
                 unit.shields += 1
                 
 class LessSpellPoints(Mutator):
-    def __init__(self):
+    def __init__(self, realm_mod = 4):
         Mutator.__init__(self)
-        self.description = "1 less SP in every third realm"
+        self.realm_mod = realm_mod
+        self.description = "Every %d realms, there's one less Memory Orb to pick up" % self.realm_mod
         
     def on_levelgen_pre(self, levelgen):
-        if levelgen.difficulty % 3 == 0:
+        if levelgen.difficulty % self.realm_mod == 0:
             levelgen.num_xp -= 1
     #well that was easy
 
@@ -817,17 +822,35 @@ def addCumulativeTrial(newMutator):
    
 addCumulativeTrial(MoreGates(realm_list=[2,15]))
 addCumulativeTrial(MonsterHordes(10,20,10,6))
-addCumulativeTrial(EnemyDamageMult(1.15)) 
+addCumulativeTrial(EnemyDamageMult(1.15))
 addCumulativeTrial(EliteSpawnsAndGates(realm_start = 9, realm_step = 2, max_avg_elites = 6))
 addCumulativeTrial(LessConsumables())
 if not MORDRED_OVERHAULED:
-    addCumulativeTrial(StrongerMordred()) 
-addCumulativeTrial(MonsterHPMultFraction(1.3))    
+    addCumulativeTrial(StrongerMordred())
+addCumulativeTrial(MonsterHPMultFraction(1.3))
 addCumulativeTrial(FasterShieldGates())
 addCumulativeTrial(PlayerHealingReduction(healMissing = .6, healMax = .4)) 
 addCumulativeTrial(EnemyShieldIncrease(chance=0.3, gateChance = 0.02))
 addCumulativeTrial(WizardAndCooldowns(cool_mult=0.7, realm_wizard_start = 7, wizard_chance_per_realm = .1))
 addCumulativeTrial(EnemyDamageMult(1.3))
-addCumulativeTrial(LessSpellPoints())
+addCumulativeTrial(LessSpellPoints(realm_mod = 4))
+
+#and for the true masochists, here's one with all the nerfs undone
+UnfairMutators = [MoreGates(realm_list=[2,8,15]), 
+                   WizardAndCooldowns(cool_mult=0.7, realm_wizard_start = 7, wizard_chance_per_realm = 1),
+                   LessSpellPoints(realm_mod = 3)]
+
+UnfairTrial = copy.deepcopy(TrialList[-1])
+UnfairTrial.name = "Unfair Challenge"
+for u in UnfairMutators:
+    for m in UnfairTrial.mutators:
+        if type(m) == type(u):
+            UnfairTrial.mutators.remove(m)
+    u.description = ""
+    UnfairTrial.mutators.append(u)
+    
+UnfairTrial.mutators[1].description = "Same modifiers as all the previous Rogue Challenges, plus...\n"  
+UnfairTrial.mutators[2].description = "All nerfs I've made to Rogue Challenges are reverted. This is REALLY HARD"
+TrialList.append(UnfairTrial)
 
 all_trials.extend(TrialList)
