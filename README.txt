@@ -96,9 +96,10 @@ This mod adds many additonal archmage trials. All of them limit your spells and 
 - After realm 1 this effect applies to gates at a 2% chance, increasing by 2% each realm until it reaches 30%
 
 ----- Rogue Challenge 11:
---- All enemy monsters have cooldowns reduced by 30%, rounded up; enemy wizards appear after realm 6.
+--- All enemy monsters have cooldowns reduced by 30%, rounded up; enemy wizards may appear in realm 7 or later
 
 - The smallest cooldown that is affected is 4, which is changed to 3 by this challenge.
+- There's a 10% chance of an wizard appearing in realm 7, and the chance increases by 10% on each successive realm.
 - The wizards that can appear are the same ones that appear in Wizard Warlords trial.
 
 ----- Rogue Challenge 12:
