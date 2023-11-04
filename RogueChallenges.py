@@ -85,13 +85,44 @@ def modify_class(cls):
                     self.draw_string(line, self.screen, cur_x, cur_y)
                     cur_y += self.linesize
                     
+        def get_anim(self, unit, forced_name=None):
+
+            # Find the asset name
+            if forced_name:
+                asset = ["char", forced_name]
+            else:
+                asset = get_unit_asset(unit)
+
+            # Determine lair colors for lairs
+            lair_colors = None
+            if unit.is_lair:
+                example_monster = unit.buffs[0].example_monster
+                example_sprite_name = example_monster.get_asset_name()
+                example_sprite = self.get_sprite_sheet(get_unit_asset(example_monster))
+                lair_colors = example_sprite.get_lair_colors()
+                
+            # modify colors of elite gates
+            if lair_colors is not None and unit.description == "EliteGate":
+                new_colors = []
+                for i in range(len(lair_colors)):
+                    color = lair_colors[i]
+                    colorR = min(255, color[0] + 70)
+                    colorG = min(255, color[1] + 70)
+                    colorB = min(255, color[2] + 70)
+                    new_colors.append(tuple([colorR, colorG, colorB]))
+                    
+                lair_colors = tuple(new_colors)
+
+            sprite = self.get_sprite_sheet(asset, lair_colors=lair_colors)
+
+            return UnitSprite(unit, sprite, view=self)
+                    
     for func_name, func in [(key, value) for key, value in locals().items() if callable(value)]:
         if hasattr(cls, func_name):
             setattr(cls, func_name, func)
 
-if not BUG_FIXED:
-    curr_module = sys.modules[__name__]
-    curr_module.modify_class(PyGameView)
+curr_module = sys.modules[__name__]
+curr_module.modify_class(PyGameView)
 
 
 class RogueLikeMode(Mutator):
