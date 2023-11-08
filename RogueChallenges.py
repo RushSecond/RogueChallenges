@@ -5,11 +5,11 @@
 STARTING_SPELLS = 14
 #The number of starting spells that are level 1 (default is 2)
 LEVEL_ONES = 2
-#The number of spells gained on each level (default is 2)
+#The number of spells gained on each realm (default is 2)
 SPELLS_PER_LEVEL = 2
 #The number of skills you start with (default 7). Set this to -1 to start with all skills
 STARTING_SKILLS = 7
-#The number of skills gained on each level (default is 1)
+#The number of skills gained on each realm (default is 1)
 SKILLS_PER_LEVEL = 1
 #The cost discount for all skills (default is 0)
 SKILL_DISCOUNT = 0
@@ -19,6 +19,7 @@ from CommonContent import *
 from Consumables import *
 from Mutators import *
 from RiftWizard import *
+from Variants import *
 import Level, Spells, Monsters, math
 import sys, random, copy
 
@@ -84,13 +85,44 @@ def modify_class(cls):
                     self.draw_string(line, self.screen, cur_x, cur_y)
                     cur_y += self.linesize
                     
+        def get_anim(self, unit, forced_name=None):
+
+            # Find the asset name
+            if forced_name:
+                asset = ["char", forced_name]
+            else:
+                asset = get_unit_asset(unit)
+
+            # Determine lair colors for lairs
+            lair_colors = None
+            if unit.is_lair:
+                example_monster = unit.buffs[0].example_monster
+                example_sprite_name = example_monster.get_asset_name()
+                example_sprite = self.get_sprite_sheet(get_unit_asset(example_monster))
+                lair_colors = example_sprite.get_lair_colors()
+                
+            # modify colors of elite gates
+            if lair_colors is not None and unit.description == "EliteGate":
+                new_colors = []
+                for i in range(len(lair_colors)):
+                    color = lair_colors[i]
+                    colorR = min(255, color[0] + 70)
+                    colorG = min(255, color[1] + 70)
+                    colorB = min(255, color[2] + 70)
+                    new_colors.append(tuple([colorR, colorG, colorB]))
+                    
+                lair_colors = tuple(new_colors)
+
+            sprite = self.get_sprite_sheet(asset, lair_colors=lair_colors)
+
+            return UnitSprite(unit, sprite, view=self)
+                    
     for func_name, func in [(key, value) for key, value in locals().items() if callable(value)]:
         if hasattr(cls, func_name):
             setattr(cls, func_name, func)
 
-if not BUG_FIXED:
-    curr_module = sys.modules[__name__]
-    curr_module.modify_class(PyGameView)
+curr_module = sys.modules[__name__]
+curr_module.modify_class(PyGameView)
 
 
 class RogueLikeMode(Mutator):
@@ -105,7 +137,7 @@ class RogueLikeMode(Mutator):
         self.num_newspells = math.floor(num_newspells)
         self.num_newskills = math.floor(num_newskills)
         self.discount = math.floor(discount)
-        self.description = "Start with %d spells and %d skills\nGain %d new spells and %d new skills after each completed level" % (self.numspells, self.numskills, self.num_newspells, self.num_newskills)
+        self.description = "Start with %d spells and %d skills\nGain %d new spells and %d new skills after each completed realm" % (self.numspells, self.numskills, self.num_newspells, self.num_newskills)
         if self.discount > 0:
             self.description += "\nSkills are %d SP cheaper" % self.discount
         self.otherspells = None
@@ -177,7 +209,7 @@ class RogueLikeModeBuff(Level.Buff):
         self.owner_triggers[Level.EventOnUnitAdded] = self.enter_level_reset
         
     def enter_level_reset(self, evt):
-        self.triggered = False #now ready to grant new spells when the level is cleared
+        self.triggered = False #now ready to grant new spells when the realm is cleared
         
     def on_pre_advance(self):
         if self.triggered:
@@ -203,17 +235,19 @@ class RogueLikeModeBuff(Level.Buff):
             
 class MoreGates(Mutator):
     
-    def __init__(self):
+    def __init__(self, realm_list=[2,15]):
         Mutator.__init__(self)
-        self.description = "Each level has additional monster generators"
+        self.realm_list = realm_list
+        self.description = "Each realm has additional monster generators"
 
     def on_levelgen_pre(self, levelgen):
         #dont add gates to Mordred's place
-        if levelgen.difficulty == 1 or levelgen.difficulty == Level.LAST_LEVEL:
+        if levelgen.difficulty == Level.LAST_LEVEL:
             return
         
-        moreGateNum = 1 if levelgen.difficulty < 8 else 2 if levelgen.difficulty < 15 else 3
-        levelgen.num_generators += moreGateNum
+        for realm_num in self.realm_list:
+            if levelgen.difficulty >= realm_num:
+                levelgen.num_generators += 1
              
 class MonsterHordes(Mutator):
 
@@ -223,7 +257,7 @@ class MonsterHordes(Mutator):
         self.max_monsters = max_monsters
         self.min_horde = min_horde
         self.max_horde = max_horde
-        self.description = "All levels have more monsters. Areas with relatively easier monsters have many more of them"
+        self.description = "All realms have more monsters. Realms with relatively easier monsters have many more of them"
         
     def on_levelgen_pre(self, levelgen):
         if levelgen.difficulty == 1:
@@ -289,31 +323,162 @@ class MonsterHPMultFraction(Mutator):
 
 class EliteSpawnsAndGates(Mutator):
 
-    def __init__(self, min_monsters, max_monsters):
+    def __init__(self, realm_start = 9, realm_step = 2, max_avg_elites = 6):
         Mutator.__init__(self)
-        self.min_monsters = min_monsters
-        self.max_monsters = max_monsters
-        self.description = "Each level beyond level 12 has %d-%d extra elite monsters; later levels have elite gates" % (self.min_monsters, self.max_monsters)
+        self.realm_start = realm_start
+        if TEST_ELITE_GATES:
+            self.realm_start = 1
+        self.realm_step = realm_step
+        self.max_avg_elites = max_avg_elites
+        self.description = "Realms %d and beyond have extra elite monsters and elite gates" % self.realm_start
+        
+    def extra_elite_num(self, levelgen):
+        num_steps = (levelgen.difficulty - self.realm_start) // self.realm_step
+        num = min(self.max_avg_elites, num_steps+1)
+        
+        return levelgen.random.randint(num-1,num+1)
+        
+    def roll_variant_new(self, spawn, levelgen):
+        elite_gate_flag = levelgen.difficulty >= self.realm_start and not hasattr(levelgen, "gate_elite")
 
-    def on_levelgen_pre(self, levelgen):
-        # don't add more elites to Mordred's pad
-        if (levelgen.difficulty <= 12 or levelgen.difficulty == Level.LAST_LEVEL) and not TEST_ELITE_GATES:
-            return
+        prng = levelgen.random
+
+        # forcevariant cheat- allways spawn a specific variant, even if that monster isnt present.  for debug.
+        if 'forcevariant' in sys.argv:
+            var_str = sys.argv[sys.argv.index('forcevariant') + 1]
+            var_str = var_str.lower()
+            var_str = var_str.replace(' ', '')
+            var_str = var_str.replace('_', '')
+
+            for spawn_list in variants.values():
+                for spawn, lb, ub, w in spawn_list:
+                    spawn_str = spawn().name
+                    spawn_str = spawn_str.replace(' ', '')
+                    spawn_str = spawn_str.lower()
+                    if var_str in spawn_str:
+                        num = prng.randint(lb, ub)
+                        units = [spawn() for i in range(num)]
+                        return units
+
+        if spawn in variants:
+            options = variants[spawn]
+            choice = prng.choices(population=options, weights=[o[3] for o in options])[0]
+            variant_spawn, min_num, max_num, weight = choice 
+            num = prng.randint(min_num, max_num)
             
-        levelgen.num_eliteGates = 0 if levelgen.difficulty < 15 else 1 if levelgen.difficulty < 18 else 2 if levelgen.difficulty < 22 else 3
-        levelgen.num_generators -= levelgen.num_eliteGates
+            # some really bad stuff can come out of gates with max num of 4
+            # but oh well lets see some fireworks
+            if (max_num >= 4 and elite_gate_flag):
+                levelgen.gate_elite = variant_spawn # for making gates
+                num += self.extra_elite_num(levelgen)
+
+            units = [variant_spawn() for i in range(num)]
+    #       if max_num == 1:
+    #           for u in units:
+    #               u.is_boss = True
+
+            return units
+        else:
+            return None
+        
+    def get_elites_new(self, levelgen):
+        elite_gate_flag = levelgen.difficulty >= self.realm_start and not hasattr(levelgen, "gate_elite")
     
         _, level = get_spawn_min_max(levelgen.difficulty)
-        level += 1
 
-        num_elites = levelgen.random.randint(self.min_monsters, self.max_monsters)
+        # if there's no gate elite, force a level +1 for it
+        if levelgen.difficulty < 5 or elite_gate_flag:
+            modifier = 1
+        else:
+            modifier = self.random.choice([1, 1, 1, 1, 2, 2])
 
-        options = [(s, l) for s, l in Monsters.spawn_options if l == level]
-        spawner = levelgen.random.choice(options)[0]
+        level = min(level + modifier, 9)
+
+        if modifier == 1:
+            num_elites = self.random.choice([5, 6, 7])
+        if modifier == 2:
+            num_elites = self.random.choice([3, 4, 5])
+        if modifier == 3:
+            num_elites = self.random.choice([2, 3])
+
+        options = [(s, l) for s, l in spawn_options if l == level]
+        spawner = self.random.choice(options)[0]
         
-        levelgen.chosen_elite = spawner #for the purposes of elite gate mutator
+        if elite_gate_flag:
+            levelgen.gate_elite = spawner # for making gates
+            num_elites += self.extra_elite_num(levelgen)
+            
         units = [spawner() for i in range(num_elites)] 
-        levelgen.bosses = units + levelgen.bosses     
+        return units
+
+    def on_levelgen_pre(self, levelgen):
+        difficulty = levelgen.difficulty
+        # don't add more elites to Mordred's pad
+        if difficulty == Level.LAST_LEVEL:
+            return
+            
+        levelgen.num_eliteGates = (0 if difficulty < self.realm_start else
+                                    1 if difficulty < 15 else
+                                    2 if difficulty < 22 else 
+                                    3)
+        levelgen.num_generators -= levelgen.num_eliteGates
+        
+        # ok now lets redo the whole boss list
+        levelgen.bosses = []
+
+        num_boss_spawns = (0 if difficulty <= 1 and not TEST_ELITE_GATES else
+                           1 if difficulty <= 3 and not TEST_ELITE_GATES else
+                           2 if difficulty <= 8 else
+                           3)
+
+        # for debugging
+        if 'forcevariant' in sys.argv:
+            num_boss_spawns = 1
+
+        for i in range(num_boss_spawns):
+        
+            # first 50% chance to make a variant if we can, otherwise make an elite
+            # Should be- 50% first time, 30% subsequent times
+        
+            chance = .5 if i == 0 else .3
+            
+            # 0% last time if we still need an elite gate
+            if difficulty >= self.realm_start and i == num_boss_spawns-1 and not hasattr(levelgen, "gate_elite"):
+                chance = 0
+                
+            roll_result = None
+            
+            if levelgen.random.random() < chance or 'forcevariant' in sys.argv:
+                spawn_type = levelgen.random.choice(levelgen.spawn_options)
+                roll_result = self.roll_variant_new(spawn_type[0], levelgen)
+                
+            if roll_result is not None:
+                levelgen.bosses.extend(roll_result)
+            else:
+                levelgen.bosses.extend(self.get_elites_new(levelgen))
+
+        num_uniques = 0
+        if 6 <= difficulty <= 10:
+            num_uniques = levelgen.random.choice([0, 0, 1])
+        if 11 <= difficulty <= 19:
+            num_uniques = levelgen.random.choice([1, 1, 2])
+        if 19 <= difficulty <= 22:
+            num_uniques = levelgen.random.choice([2, 3])
+        if 23 <= difficulty < LAST_LEVEL:
+            num_uniques = 3
+
+        if 'forcerare' in sys.argv:
+            num_uniques = 1
+
+        for i in range(num_uniques):
+            tags = set()
+            
+            for o in levelgen.spawn_options:
+                for t in o[0]().tags:
+                    tags.add(t)
+
+            spawns = roll_rare_spawn(difficulty, tags, prng=levelgen.random)
+            levelgen.bosses.extend(spawns)
         
     def on_levelgen(self, levelgen):
         _, cost = get_spawn_min_max(levelgen.difficulty)
@@ -326,7 +491,7 @@ class EliteSpawnsAndGates(Mutator):
             spawn_point = levelgen.wall_spawn_points.pop()
             levelgen.level.make_floor(spawn_point.x, spawn_point.y)
 
-            obj = MonsterSpawner(levelgen.chosen_elite)
+            obj = MonsterSpawner(levelgen.gate_elite)
             obj.max_hp = 18 + cost * 12
             obj.description = "EliteGate" # so shielded gates mutator can recognize this is elite
             
@@ -336,7 +501,7 @@ class SpawnUniques(Mutator): # not actually used now
 
     def __init__(self):
         Mutator.__init__(self)
-        self.description = "More unique monsters in levels beyond the seventh"
+        self.description = "More unique monsters in realms beyond the seventh"
 
     def on_levelgen_pre(self, levelgen):
         #don't add uniques to Mordred's crib
@@ -355,7 +520,7 @@ class LessConsumables(Mutator):
 
     def __init__(self):
         Mutator.__init__(self)
-        self.description = "Less consumable items and mana potions in each level"
+        self.description = "Less consumable items and mana potions in each realm"
 
     def on_levelgen_pre(self, levelgen):
         if levelgen.difficulty < 3 or levelgen.difficulty == Level.LAST_LEVEL:
@@ -477,7 +642,7 @@ class EnemyDamageMult(Mutator):
         if not evt.unit.ever_spawned:
             self.modify_unit(evt.unit)
 
-    def on_levelgen(self, levelgen):            
+    def on_levelgen(self, levelgen):
         for u in levelgen.level.units:
             self.modify_unit(u)
 
@@ -493,24 +658,30 @@ class EnemyDamageMult(Mutator):
                 
 class WizardAndCooldowns(Mutator):
 
-    def __init__(self, mult=0.7):
+    def __init__(self, cool_mult=0.7, realm_wizard_start = 7, wizard_chance_per_realm = .1):
         Mutator.__init__(self)
-        self.mult = mult
-        self.description = "All enemy monsters have cooldowns reduced by %d%%, rounded up; enemy wizards appear after level 6" % round((1-self.mult)*100)
+        self.cool_mult = cool_mult
+        self.realm_wizard_start = realm_wizard_start
+        self.wizard_chance_per_realm = wizard_chance_per_realm
+        self.description = "All enemy monsters have cooldowns reduced by %d%%, rounded up; enemy wizards may appear in realm %d or later" % (round((1-self.cool_mult)*100), self.realm_wizard_start)
         self.global_triggers[Level.EventOnUnitPreAdded] = self.on_enemy_added
 
     def on_enemy_added(self, evt):
         if not evt.unit.ever_spawned:
             self.modify_unit(evt.unit)
             
-    def on_levelgen_pre(self, levelgen):            
+    def on_levelgen_pre(self, levelgen):
+        if levelgen.difficulty == Level.LAST_LEVEL:
+            return
+            
         if TEST_WIZARD_COOLDOWNS:
             wizard = FrostfireWizard()
             wizard.is_boss = True
             levelgen.bosses.append(wizard)
-            
-        if levelgen.difficulty > 6:
-            wizard = self.random.choice(RareMonsters.all_wizards)[0]()
+        
+        chance = self.wizard_chance_per_realm * (1 + levelgen.difficulty - self.realm_wizard_start)
+        if levelgen.random.random() < chance:
+            wizard = levelgen.random.choice(RareMonsters.all_wizards)[0]()
             wizard.is_boss = True
             levelgen.bosses.append(wizard)
 
@@ -524,68 +695,68 @@ class WizardAndCooldowns(Mutator):
         
         for spell in unit.spells:
             if hasattr(spell, 'cool_down'):
-                spell.cool_down = math.ceil(spell.cool_down * self.mult - 0.01)
+                spell.cool_down = math.ceil(spell.cool_down * self.cool_mult - 0.01)
 
 class WorseHealPotSpell(HealPotSpell):
+
+    def __init__(self, healMissing, healMax):
+        HealPotSpell.__init__(self)
+        self.healMissing = healMissing
+        self.healMax = healMax
+
     def cast_instant(self, x, y):
         poison = self.caster.get_buff(Poison)
         if poison:
             self.caster.remove_buff(poison)
         else:
-            self.caster.deal_damage(self.caster.cur_hp-self.caster.max_hp, Tags.Heal, self)
+            missing_hp_heal = (self.caster.max_hp - self.caster.cur_hp) * self.healMissing
+            max_hp_heal = self.caster.max_hp * self.healMax
+            heal_amount = max(missing_hp_heal, max_hp_heal)
+            self.caster.deal_damage(-heal_amount, Tags.Heal, self)
             
 class PlayerHealingReduction(Mutator):
 
-    def __init__(self, healReducPercent=30):
+    def __init__(self, healMissing, healMax):
         Mutator.__init__(self)
-        self.healReducPercent = healReducPercent
-        self.description = "Healing potions restore %d%% of your missing HP, and you restore %d%% less HP with all other healing effects"  % (100-healReducPercent, healReducPercent)
-        
+        self.healMissing = healMissing
+        self.healMax = healMax
+        self.description = "Healing potions restore %d%% of your missing HP or %d%% of your max HP, whichever is greater" % (round(self.healMissing*100), round(self.healMax*100))
+             
     def worse_heal_potion(self):
         item = heal_potion()
-        newDescription = "Drinking this potion restores 100%% of the drinker's missing HP.\n(Restores %d%% of missing HP after the healing reduction.)\n" %(100-self.healReducPercent)
+        newDescription = "Drinking this potion restores %d%% of your missing HP or %d%% of your max HP, whichever is greater.\n" % (round(self.healMissing*100), round(self.healMax*100))
         if ANTI_POISON:
             newDescription += "If the user is [poisoned], remove [poison] but does not heal."
         else:
             newDescription += "Cannot be used while poisoned."
         item.description = newDescription
-        item.set_spell(WorseHealPotSpell())
+        item.set_spell(WorseHealPotSpell(self.healMissing, self.healMax))
         return item
 
     def on_game_begin(self, game):
-        game.p1.apply_buff(HealReductionCurse(self.healReducPercent))
         newPotion = self.worse_heal_potion()
         newPotion.spell.caster = game.p1
         newPotion.spell.owner = game.p1
         game.p1.items[0] = newPotion
         
         if TEST_HEAL_REDUCTION:
-            game.p1.cur_hp = 5
+            game.p1.cur_hp = 1
             game.p1.add_spell(SoulTax())
             
     def on_levelgen_pre(self, levelgen):            
         if TEST_HEAL_REDUCTION:
-            if levelgen.difficulty == 1:
-                levelgen.bosses.append(Ogre())
-            else:
-                levelgen.items.append(heal_potion())
+            levelgen.items.append(heal_potion())
         
         for i in range(len(levelgen.items)):
             if levelgen.items[i].name == "Healing Potion":
                 levelgen.items[i] = self.worse_heal_potion()
-        
-class HealReductionCurse(Level.Buff):
-
-    def __init__(self, healReducPercent):
-        Level.Buff.__init__(self)
-        self.buff_type = Level.BUFF_TYPE_PASSIVE
-        self.resists[Tags.Heal] = healReducPercent
             
 class EnemyShieldIncrease(Mutator):
     
-    def __init__(self, chance=0.3):
+    def __init__(self, chance=0.3, gateChance = 0.02):
         Mutator.__init__(self)
         self.chance = chance
+        self.gateChance = gateChance
         self.description = "Each point of SH on monsters has a %d%% chance of granting +1 SH" % round((self.chance)*100)
         self.global_triggers[Level.EventOnUnitPreAdded] = self.on_enemy_added
 
@@ -601,27 +772,31 @@ class EnemyShieldIncrease(Mutator):
 
     def on_levelgen(self, levelgen):            
         for u in levelgen.level.units:
-            self.modify_unit(u, levelgen.random)
+            self.modify_unit(u, levelgen.random, levelgen.difficulty)
 
-    def modify_unit(self, unit, prng=None):
-        if unit.is_lair or unit.team == TEAM_PLAYER or unit.name == "Mordred":
+    def modify_unit(self, unit, prng=None, difficulty = 1):
+        if unit.team == TEAM_PLAYER or unit.name == "Mordred":
             return
             
         if not prng:
             prng = random
         
         num_trials = unit.shields
+        shieldChance = self.chance
+        if unit.is_lair:
+            shieldChance = min(self.chance, self.gateChance * (difficulty - 1))
         for _ in range(0, num_trials):
             if prng.random() < self.chance:
                 unit.shields += 1
                 
 class LessSpellPoints(Mutator):
-    def __init__(self):
+    def __init__(self, realm_mod = 4):
         Mutator.__init__(self)
-        self.description = "1 less SP in every third level"
+        self.realm_mod = realm_mod
+        self.description = "Every %d realms, there's one less Memory Orb to pick up" % self.realm_mod
         
     def on_levelgen_pre(self, levelgen):
-        if levelgen.difficulty % 3 == 0:
+        if levelgen.difficulty % self.realm_mod == 0:
             levelgen.num_xp -= 1
     #well that was easy
 
@@ -659,18 +834,18 @@ def addCumulativeTrial(newMutator):
         (1, 3), # 4 - more elites
         (2, 3), # 5 - generators increase
         (2, 4), # 6 - chance of unique
-        (2, 4), # 7 - (guaranteed wizard)
-        (2, 4), # 8 - (+1 gate)
-        (2, 4), # 9 - more elites
+        (2, 4), # 7 - (10% wizard)
+        (2, 4), # 8
+        (2, 4), # 9 - more elites (slightly more, and change one gate to an elite type )
         (3, 4), # 10 - generators increase
         (3, 5), # 11 - guaranteed unique, harder uniques
         (3, 5), # 12 
-        (3, 5), # 13 - (more elite)
+        (3, 5), # 13 - (another gate changed to elite)
         (4, 5), # 14
-        (4, 5), # 15 - (+1 gate)(change one gate to the elite type introduced in #13)
+        (4, 5), # 15 - (+1 gate)
         (4, 6), # 16
         (5, 6), # 17
-        (5, 6), # 18 - (another gate changed to elite)
+        (5, 6), # 18 - 
         (5, 6), # 19 - guaranteed 2 unique
         (5, 7), # 20 - generators increase, harder uniques
         (5, 7), # 21   
@@ -679,19 +854,37 @@ def addCumulativeTrial(newMutator):
         (7, 8), # 24
 """
    
-addCumulativeTrial(MoreGates())
+addCumulativeTrial(MoreGates(realm_list=[2,15]))
 addCumulativeTrial(MonsterHordes(10,20,10,6))
-addCumulativeTrial(EnemyDamageMult(1.15)) 
-addCumulativeTrial(EliteSpawnsAndGates(5,7))
+addCumulativeTrial(EnemyDamageMult(1.15))
+addCumulativeTrial(EliteSpawnsAndGates(realm_start = 9, realm_step = 2, max_avg_elites = 6))
 addCumulativeTrial(LessConsumables())
 if not MORDRED_OVERHAULED:
-    addCumulativeTrial(StrongerMordred()) 
-addCumulativeTrial(MonsterHPMultFraction(1.3))    
+    addCumulativeTrial(StrongerMordred())
+addCumulativeTrial(MonsterHPMultFraction(1.3))
 addCumulativeTrial(FasterShieldGates())
-addCumulativeTrial(PlayerHealingReduction(35)) 
-addCumulativeTrial(EnemyShieldIncrease(0.3))
-addCumulativeTrial(WizardAndCooldowns(0.7))
+addCumulativeTrial(PlayerHealingReduction(healMissing = .6, healMax = .4)) 
+addCumulativeTrial(EnemyShieldIncrease(chance=0.3, gateChance = 0.02))
+addCumulativeTrial(WizardAndCooldowns(cool_mult=0.7, realm_wizard_start = 7, wizard_chance_per_realm = .1))
 addCumulativeTrial(EnemyDamageMult(1.3))
-addCumulativeTrial(LessSpellPoints())
+addCumulativeTrial(LessSpellPoints(realm_mod = 4))
+
+#and for the true masochists, here's one with all the nerfs undone
+UnfairMutators = [MoreGates(realm_list=[2,8,15]), 
+                   WizardAndCooldowns(cool_mult=0.7, realm_wizard_start = 7, wizard_chance_per_realm = 1),
+                   LessSpellPoints(realm_mod = 3)]
+
+UnfairTrial = copy.deepcopy(TrialList[-1])
+UnfairTrial.name = "Unfair Challenge"
+for u in UnfairMutators:
+    for m in UnfairTrial.mutators:
+        if type(m) == type(u):
+            UnfairTrial.mutators.remove(m)
+    u.description = ""
+    UnfairTrial.mutators.append(u)
+    
+UnfairTrial.mutators[1].description = "Same modifiers as all the previous Rogue Challenges, plus...\n"  
+UnfairTrial.mutators[2].description = "All nerfs I've made to Rogue Challenges are reverted. This is REALLY HARD"
+TrialList.append(UnfairTrial)
 
 all_trials.extend(TrialList)
