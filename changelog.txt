@@ -1,0 +1,7 @@
++ RC 1 no longer has +1 gate on realm 8
++ RC 4 chosen elites are high level monsters or variants that were present in the level before, if possible
++ RC 9 remove heal reduction passive, healing potions heal 60% of missing hp or 40% of max hp, whichever is greater
++ RC 10 past level 2, gates also can have additional shields (2% higher chance per realm)
++ RC 11 guaranteed wizard instead is a 10% chance of wizard, +10% more chance on each futher level
+- RC 13 every 3rd level has 1 less SP -> every 4th
+- new "Unfair Challenge" that undoes the RC 1, 11, 13 nerfs
